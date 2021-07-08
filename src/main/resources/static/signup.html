@@ -8,9 +8,46 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <script src="/js/login.js"></script>
     <meta charset="UTF-8">
     <title>회원가입 페이지</title>
     <script>
+        $.ajax({
+            type:'POST',
+            url:'/user/signup',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (response){
+                console.log(data)
+            },
+            error : function (response) {
+                if (response.responseJson && response.responseJson.message) {
+                    alert(response.responseJson.message);
+                }else {
+                    alert("알 수 없는 에러가 발생했습니다")
+                }
+            }
+
+        })
+        $(document).ready(function(){
+            home()
+        })
+
+        function home(){
+            $('.login__title').on('click',function (){
+                window.location.href="/"
+            })
+        }
+
+        function blank_check(){
+
+            frm1 = document.signup_form;
+            if(frm1.username.value=='' || frm1.password.value=='' || frm1.password_check.value=='' || frm1.email.value=='' ){
+                alert('필수 입력란이 비었습니다! 확인해주세요.')
+                return false;
+            }
+
+        }
         function onclickAdmin() {
             // Get the checkbox
             var checkBox = document.getElementById("admin-check");
@@ -24,6 +61,8 @@
                 box.style.display = "none";
             }
         }
+
+
     </script>
 </head>
 <body>
@@ -33,7 +72,9 @@
     <form action="/user/signup" method="post">
         <div class="login-id-label">Username</div>
         <input type="text" name="username" placeholder="Username" class="login-input-box">
+        <div th:if="${username}=='duplicate'" role="alert">
 
+        </div>
         <div class="login-id-label">Password</div>
         <input type="password" name="password" class="login-input-box">
 

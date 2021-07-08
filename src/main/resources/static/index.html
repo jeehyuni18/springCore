@@ -8,32 +8,366 @@
     <meta property="og:title" content="00만의 셀렉샵">
     <meta property="og:description" content="관심상품을 선택하고, 최저가 알림을 확인해보세요!">
     <meta property="og:image" content="images/og_selectshop.png">
-    <link href="https://fonts.googleapis.com/css2?family=family=Nanum+Gothic&display=swap" rel="stylesheet">
+<!--    <link href="https://fonts.googleapis.com/css2?family=family=Nanum+Gothic&display=swap" rel="stylesheet">-->
     <link rel="stylesheet" href="css/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="basic.js"></script>
-    <title>나만의 셀렉샵</title>
+<!--    <script src="basic.js"></script>-->
+    <title>Board Service</title>
+    <script>
+        // 미리 작성된 영역 - 수정하지 않으셔도 됩니다.
+        // 사용자가 내용을 올바르게 입력하였는지 확인합니다.
+        // function isValidTitle(title) {
+        //     if (title == '') {
+        //         alert('제목을 입력해주세요');
+        //         return false;
+        //     }
+        //     if (title.trim().length > 20) {
+        //         alert('공백 포함 20자 이하로 입력해주세요');
+        //         return false;
+        //     }
+        //     return true;
+        // }
+        function getId() {
+            let id = location.search.split('=')[1]
+            getDetail(id)
+            getComment(id)
+        }
+
+        function create_comment() {
+            let memo_id = location.search.split('=')[1]
+            let name = $('.username01').text();
+            let contents = $('.post__comment-textarea').val();
+            if (!name || $('.link-signup').text() == '로그인 하러 가기') {
+                alert("로그인을 하셔야 댓글을 달수 있습니다!")
+                return;
+            }
+            if (contents == '') {
+                alert("댓글을 적어주세요!!")
+                return
+            }
+            let data = {'memo_id':memo_id, 'username':name, 'contents':contents};
+
+            $.ajax({
+                type:'POST',
+                url:'/api/comments',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response){
+                    console.log(data)
+                    alert('댓글이 성공적으로 작성되었습니다!')
+                    window.location.reload();
+                }
+
+            })
+        }
+
+
+        function getComment(id) {
+            let index = id
+            $.ajax({
+                type: 'GET',
+                url: `/api/comment/${index}`,
+                success: function (response) {
+                    for(let i=0; i< response.length; i++){
+                        console.log(response[i])
+                        let comment = response[i];
+                        let tempHtml = addComments(comment)
+                        $('.comment__card-box').append(tempHtml);
+                    }
+                }
+            });
+        }
+
+        function addComments(comment){
+            return `<div class="comment__card">
+            <div class="comment__card-header">
+              <span id="${comment.id}-comment_user">${comment.username}</span><span class="comment-date">${comment.modifiedAt}</span>
+            </div>
+            <div class="comment__card-body">
+              <div class="edit-comment-wrap">
+                <div id="${comment.id}-comment" class="comment">${comment.contents}</div>
+                <textarea
+                  class="edit-comment-textarea"
+                  id="${comment.id}-edit-comment-textarea"
+                  name=""
+                  id=""
+                  cols="30"
+                  rows="10"
+                ></textarea>
+              </div>
+              <div class="comment-btn">
+                <div class="befor" id="${comment.id}-befor">
+                  <i class="far fa-edit" id="${comment.id}-edit-btn" onclick="edit_start_comment(${comment.id})" ></i>
+                  <i class="fas fa-trash-alt" id="${comment.id}-delete-btn" onclick="delete_comment(${comment.id})"></i>
+                </div>
+                <div class="after" id="${comment.id}-after">
+                  <i class="fas fa-check"  id="${comment.id}-check-btn" onclick="edit_comment(${comment.id})" ></i>
+                  <i class="fas fa-times" id="${comment.id}-cancel-btn" onclick="edit_end_comment(${comment.id})" ></i>
+                </div>
+              </div>
+            </div>
+          </div>`;
+
+        }
+
+        function edit_start_comment(id){
+            let comment_user = $(`#${id}-comment_user`).text()
+            let cur_username = $('.username01').text()
+
+            if (comment_user != cur_username){
+                alert("본인의 댓글만 수정 하실수 있습니다.")
+                return;
+            }
+            $(`#${id}-before`).hide()
+            $(`#${id}-after`).show()
+            $(`#${id}-edit-comment-textarea`).show()
+            $(`#${id}-comment`).hide()
+            $(`#${id}-edit-comment-textarea`).val($(`#${id}-comment`).text())
+
+        }
+
+        function edit_comment(id){
+            let memo_id = location.search.split('=')[1]
+            let username = $('.username01').text()
+            let contents = $(`#${id}-edit-comment-textarea`).val()
+            if(contents==''){
+                alert('수정하실 내용을 작성 해주세요!')
+                return;
+            }
+            let data = {'memo_id':memo_id,'username':username,'contents':contents}
+
+            $.ajax({
+                type:'PUT',
+                url:`/api/comments/${id}`,
+                contentType:'application/json',
+                data:JSON.stringify(data),
+                success:function (response){
+                    alert('댓글이 수정 되었습니다.')
+                    window.location.reload();
+                }
+            })
+        }
+
+
+        function edit_end_comment(id){
+            $(`#${id}-befor`).show()
+            $(`#${id}-after`).hide()
+
+            $(`#${id}-edit-comment-textarea`).hide()
+            $(`#${id}-comment`).show()
+            $(`#${id}-edit-comment-textarea`).val('')
+        }
+
+        function delete_comment(id){
+            let comment_user = $(`#${id}-comment_user`).text()
+            let cur_username = $('.username01').text()
+
+            if (comment_user != cur_username){
+                alert("본인의 댓글만 삭제하실수 있습니다.")
+                return;
+            }
+            $.ajax({
+                type:'DELETE',
+                url:`api/comments/${id}`,
+                success: function (response){
+                    alert('댓글이 삭제 되었습니다.')
+                    window.location.reload();
+                }
+            })
+        }
+
+        function showEdits(id) {
+            $(`#${id}-editarea`).show();
+            $(`#${id}-submit`).show();
+            $(`#${id}-delete`).show();
+
+            $(`#${id}-contents`).hide();
+            $(`#${id}-edit`).hide();
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // 여기서부터 코드를 작성해주시면 됩니다.
+
+        $(document).ready(function () {
+            // HTML 문서를 로드할 때마다 실행합니다.
+            getMessages();
+        })
+
+        // 메모를 불러와서 보여줍니다.
+        function getMessages() {
+            // 1. 기존 메모 내용을 지웁니다.
+            $('#cards-box').empty();
+            // 2. 메모 목록을 불러와서 HTML로 붙입니다.
+            $.ajax({
+                type: 'GET',
+                url: '/api/memos',
+                success: function (response) {
+                    for (let i = 0; i < response.length; i++) {
+                        let message = response[i];
+                        let id = message['id'];
+                        let title= message['title'];
+                        let contents = message['contents'];
+                        let modifiedAt = message['modifiedAt'];
+                        let comment= message['comment'];
+                        addHTML(id, title, contents, modifiedAt, comment);
+                    }
+                }
+            })
+        }
+
+        // 메모 하나를 HTML로 만들어서 body 태그 내 원하는 곳에 붙입니다.
+        function addHTML(id, title, contents, modifiedAt, comment) {
+            // 1. HTML 태그를 만듭니다.
+
+            let tempHtml = `<div class="card">
+                         <div id="${id}-title" class="titleIndex"  onclick="location.href='detail.html?id=${id}'">
+                              ${title}</div>
+                                    <div class="contents">
+                                    <div id="${id}-contents" class="text">
+                                        ${contents}
+                                    </div>
+                                <div class="metadata">
+                                    <div class="date">
+                                        ${modifiedAt}
+                                    </div>
+
+                                <div th:text="${username}"></div>
+                                    </div>
+                                    </div>
+                                    <div id="${id}-editarea" class="edit">
+                                        <textarea id="${id}-textarea" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
+                                    </div>
+                                    <textarea class="field" placeholder="작성자" name="username" id="username" cols="30"
+                  rows="10"></textarea>
+                                    <button class="btn" onclick="create_comment()" >작성하기</button>
+                                </div>
+                                <div class="footer">
+                                <img id="${id}-edit" class="icon-start-edit" src="images/edit.png" alt="" onclick="editComment('${id}')">
+                                    <img id="${id}-edit" class="icon-start-edit" src="images/edit.png" alt="" onclick="editPost('${id}')">
+                                    <img id="${id}-delete" class="icon-delete" src="images/delete.png" alt="" onclick="deleteOne('${id}')">
+                                    <img id="${id}-submit" class="icon-end-edit" src="images/done.png" alt="" onclick="submitEdit('${id}')">
+                                </div>
+                            </div>`;
+            let commenthtml=  `<div id="${id}-comment"> ${comment}</div>`
+            // 2. #cards-box 에 HTML을 붙인다.
+            $('#cards-box').append(tempHtml).append(commenthtml);
+        }
+
+        // 메모를 생성합니다.
+        // function writePost() {
+        //     // 1. 작성한 메모를 불러옵니다
+        //
+        //     let username= $('#username').val();
+        //     let title=$('#title').val();
+        //     let contents = $('#contents').val();
+        //
+        //     // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
+        //     if (isValidTitle(title) == false) {
+        //         return;
+        //     }
+        //     if (isValidContents(contents) == false) {
+        //         return;
+        //     }
+        //     // 3.
+        //     if (isValidUsername(username) == false) {
+        //         return;
+        //     }
+        //
+        //     // 4. 전달할 data JSON으로 만듭니다.
+        //     let data = { 'username': username, 'title': title, 'contents': contents};
+        //
+        //     // 5. POST /api/memos 에 data를 전달합니다.
+        //     $.ajax({
+        //         type: "POST",
+        //         url: "/api/memos",
+        //         contentType: "application/json",
+        //         data: JSON.stringify(data),
+        //         success: function (response) {
+        //             alert('메시지가 성공적으로 작성되었습니다.');
+        //
+        //             location.assign('/index.html')
+        //
+        //
+        //         }
+        //     });
+        // }
+        //
+        // // 메모를 수정합니다.
+        function submitEdit(id) {
+            // 1. 작성 대상 메모의 username과 contents 를 확인합니다.
+
+
+            let title= $(`#${id}-title`).text().trim();
+            let contents = $(`#${id}-textarea`).val().trim();
+
+            // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
+
+            if (isValidContents(contents) == false) {
+                return;
+            }
+            if (isValidTitle(title) == false) {
+                return;
+            }
+
+            // 3. 전달할 data JSON으로 만듭니다.
+            let data = { 'title': title, 'contents': contents};
+
+            // 4. PUT /api/memos/{id} 에 data를 전달합니다.
+            $.ajax({
+                type: "PUT",
+                url: `/api/memos/${id}`,
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    alert('메시지 변경에 성공하였습니다.');
+                    window.location.reload();
+                }
+            });
+        }
+
+        // 메모를 삭제합니다.
+        function deleteOne(id) {
+            // 1. DELETE /api/memos/{id} 에 요청해서 메모를 삭제합니다.
+            $.ajax({
+                type: "DELETE",
+                url: `/api/memos/${id}`,
+                success: function (response) {
+                    alert('메시지 삭제에 성공하였습니다.');
+                    window.location.reload();
+                }
+            })
+        }
+    </script>
 </head>
+
+
+
 <body>
 <div class="header" style="position:relative;">
     <div id="header-title-login-user">
-        <span th:text="${username}"></span> 님의
+       <span th:text="${username}"></span> 님의
     </div>
     <div id="header-title-select-shop">
-        Select Shop
+        Board Service
     </div>
     <a id="logout-text" href="/user/logout">
         로그아웃
     </a>
 </div>
-<div class="nav">
-    <div class="nav-see active">
-        모아보기
-    </div>
-    <div class="nav-search">
-        탐색하기
-    </div>
-</div>
+<!--<div th:if="!${username}">-->
+<!--    아직 회원이 아니시군요? <br />-->
+<!--    <a href="/user/signup" class="link-signup">회원 가입하러 가기</a>-->
+<!--</div>-->
+<!--<div th:if="${username}"><div th:text="${username}" class="fas fa-sign-out-alt"></div></div>-->
+<!--</div>-->
+<!--<div class="nav">-->
+<!--    <div class="nav-see active">-->
+<!--        모아보기-->
+<!--    </div>-->
+<!--    <div class="nav-search">-->
+<!--        탐색하기-->
+<!--    </div>-->
+<!--</div>-->
 <div id="see-area">
     <div id="product-container">
     </div>
@@ -60,5 +394,37 @@
     </div>
 </div>
 <div th:if="${admin}" id="admin" ></div>
+
+    <!--    <div class="area-write">-->
+    <!--        <textarea class="field" placeholder="공유하고 싶은 소식을 입력해주세요" name="contents" id="contents" cols="30"-->
+    <!--                  rows="10"></textarea>-->
+    <!--        <textarea class="field" placeholder="작성자명" name="username" id="username" cols="30"-->
+    <!--                  rows="10"></textarea>-->
+    <!--                    <button class="btn" onclick="writePost()" >작성하기</button>-->
+
+
+<div id="cards-box" class="area-read">
+    <div class="cardindex">
+        <div id="${id}-title" class="titleIndex" onclick="location.href='detail.html?id=${id}'">
+            <div id="id"> ${title}</div>
+
+            <div class="metadata">
+                <div class="date">
+                    ${modifiedAt}
+                </div>
+
+
+                        <div th:text="${username}"></div>
+
+
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <button type="button" class="btn"  onClick="location.href='write.html'"> 새 글 쓰기</button>
+</div>
+
 </body>
 </html>

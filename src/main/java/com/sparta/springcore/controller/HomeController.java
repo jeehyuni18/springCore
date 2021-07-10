@@ -16,6 +16,9 @@ public class HomeController {
     }
 
 
+
+
+
     @Secured("ROLE_ADMIN")
     @GetMapping("/admin")
     public String admin(Model model, @AuthenticationPrincipal UserDetailsImpl userDetails) {

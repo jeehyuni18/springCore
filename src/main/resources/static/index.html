@@ -8,10 +8,10 @@
     <meta property="og:title" content="00만의 셀렉샵">
     <meta property="og:description" content="관심상품을 선택하고, 최저가 알림을 확인해보세요!">
     <meta property="og:image" content="images/og_selectshop.png">
-<!--    <link href="https://fonts.googleapis.com/css2?family=family=Nanum+Gothic&display=swap" rel="stylesheet">-->
+    <!--    <link href="https://fonts.googleapis.com/css2?family=family=Nanum+Gothic&display=swap" rel="stylesheet">-->
     <link rel="stylesheet" href="css/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<!--    <script src="basic.js"></script>-->
+    <!--    <script src="basic.js"></script>-->
     <title>Board Service</title>
     <script>
         // 미리 작성된 영역 - 수정하지 않으셔도 됩니다.
@@ -231,7 +231,6 @@
                                         ${modifiedAt}
                                     </div>
 
-                                <div th:text="${username}"></div>
                                     </div>
                                     </div>
                                     <div id="${id}-editarea" class="edit">
@@ -345,7 +344,7 @@
 <body>
 <div class="header" style="position:relative;">
     <div id="header-title-login-user">
-       <span th:text="${username}"></span> 님의
+        <span th:text="${username}"></span> 님의
     </div>
     <div id="header-title-select-shop">
         Board Service
@@ -395,12 +394,12 @@
 </div>
 <div th:if="${admin}" id="admin" ></div>
 
-    <!--    <div class="area-write">-->
-    <!--        <textarea class="field" placeholder="공유하고 싶은 소식을 입력해주세요" name="contents" id="contents" cols="30"-->
-    <!--                  rows="10"></textarea>-->
-    <!--        <textarea class="field" placeholder="작성자명" name="username" id="username" cols="30"-->
-    <!--                  rows="10"></textarea>-->
-    <!--                    <button class="btn" onclick="writePost()" >작성하기</button>-->
+<!--    <div class="area-write">-->
+<!--        <textarea class="field" placeholder="공유하고 싶은 소식을 입력해주세요" name="contents" id="contents" cols="30"-->
+<!--                  rows="10"></textarea>-->
+<!--        <textarea class="field" placeholder="작성자명" name="username" id="username" cols="30"-->
+<!--                  rows="10"></textarea>-->
+<!--                    <button class="btn" onclick="writePost()" >작성하기</button>-->
 
 
 <div id="cards-box" class="area-read">
@@ -414,16 +413,16 @@
                 </div>
 
 
-                        <div th:text="${username}"></div>
 
 
 
-                </div>
+
             </div>
         </div>
-
     </div>
-    <button type="button" class="btn"  onClick="location.href='write.html'"> 새 글 쓰기</button>
+
+</div>
+<button type="button" class="btn"  onClick="location.href='write.html'"> 새 글 쓰기</button>
 </div>
 
 </body>
